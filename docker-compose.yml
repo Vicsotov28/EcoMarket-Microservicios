@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # ------------------------------------------------------------
+  # BASE DE DATOS (PostgreSQL)
+  # ------------------------------------------------------------
+  postgresdb:
+    image: postgres:15
+    container_name: ecomarket-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: vicho2003
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres-init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecomarket-net
+
+  # ------------------------------------------------------------
+  # MENSAJERÍA (Zookeeper - Versión Confluent)
+  # ------------------------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: ecomarket-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - ecomarket-net
+
+  # ------------------------------------------------------------
+  # MENSAJERÍA (Kafka - Versión Confluent)
+  # ------------------------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: ecomarket-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - ecomarket-net
+
+  # ------------------------------------------------------------
+  # VISUALIZADOR (Kafdrop)
+  # ------------------------------------------------------------
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: ecomarket-kafdrop
+    restart: "no"
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9092"
+    depends_on:
+      - kafka
+    networks:
+      - ecomarket-net
+
+networks:
+  ecomarket-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,21 @@
+# --- Java / Maven ---
+target/
+*.jar
+*.war
+.mvn/
+mvnw
+mvnw.cmd
+
+# --- IntelliJ IDEA ---
+.idea/
+*.iml
+
+# --- Node / React ---
+node_modules/
+build/
+.env
+npm-debug.log*
+
+# --- OS Junk ---
+.DS_Store
+Thumbs.db
